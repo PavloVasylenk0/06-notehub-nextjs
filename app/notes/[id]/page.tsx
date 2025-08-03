@@ -4,13 +4,13 @@ import NoteDetailsClient from "./NoteDetails.client";
 import { notFound } from "next/navigation";
 
 interface PageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
-  const id = (await Promise.resolve(params)).id;
+  const { id } = await params;
 
   try {
     const note = await fetchNoteById(id);
@@ -27,7 +27,7 @@ export async function generateMetadata({
 }
 
 export default async function NoteDetailsPage({ params }: PageProps) {
-  const id = (await Promise.resolve(params)).id;
+  const { id } = await params;
 
   try {
     const note = await fetchNoteById(id);
