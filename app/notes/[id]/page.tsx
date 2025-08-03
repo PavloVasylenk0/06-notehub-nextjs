@@ -1,19 +1,38 @@
+import { Metadata } from "next";
 import { fetchNoteById } from "@/lib/api";
 import NoteDetailsClient from "./NoteDetails.client";
-import type { Note } from "@/types/note";
+import { notFound } from "next/navigation";
 
-interface PageParams {
-  params: {
-    id: string;
-  };
+interface PageProps {
+  params: { id: string };
 }
 
-export default async function NoteDetailsPage({ params }: PageParams) {
-  if (!params?.id) {
-    throw new Error("Note ID is missing");
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
+  const id = (await Promise.resolve(params)).id;
+
+  try {
+    const note = await fetchNoteById(id);
+    return {
+      title: note.title || "Note Details",
+      description: note.content.substring(0, 160),
+    };
+  } catch {
+    return {
+      title: "Note not found",
+      description: "The requested note does not exist.",
+    };
   }
+}
 
-  const note: Note = await fetchNoteById(params.id);
+export default async function NoteDetailsPage({ params }: PageProps) {
+  const id = (await Promise.resolve(params)).id;
 
-  return <NoteDetailsClient note={note} />;
+  try {
+    const note = await fetchNoteById(id);
+    return <NoteDetailsClient initialNote={note} />;
+  } catch {
+    notFound();
+  }
 }
