@@ -1,39 +1,36 @@
-'use client'
+"use client";
 
 import { useQuery } from "@tanstack/react-query";
 import { fetchNoteById } from "@/lib/api";
-import { useParams } from "next/navigation";
 import css from "./NoteDetails.module.css";
 import type { Note } from "@/types/note";
 
 interface NoteDetailsClientProps {
+  id: string;
   initialNote?: Note | null;
 }
 
 export default function NoteDetailsClient({
+  id,
   initialNote = null,
 }: NoteDetailsClientProps) {
-  const params = useParams();
-  const noteId = getValidNoteId(params?.id);
-
   const {
     data: note,
     isLoading,
     isError,
     error,
   } = useQuery<Note, Error>({
-    queryKey: ["note", noteId],
+    queryKey: ["note", id],
     queryFn: () => {
-      if (!noteId) throw new Error("Note ID is required");
-      return fetchNoteById(noteId);
+      if (!id) throw new Error("Note ID is required");
+      return fetchNoteById(id);
     },
-    enabled: !!noteId,
     initialData: initialNote ?? undefined,
     staleTime: 60 * 1000,
     retry: 2,
   });
 
-  if (!noteId) {
+  if (!id) {
     return <div className={css.error}>Invalid note ID</div>;
   }
 
@@ -72,10 +69,4 @@ export default function NoteDetailsClient({
       </div>
     </div>
   );
-}
-
-function getValidNoteId(id: unknown): string | undefined {
-  if (typeof id === "string") return id;
-  if (Array.isArray(id) && id.length > 0) return id[0];
-  return undefined;
 }
